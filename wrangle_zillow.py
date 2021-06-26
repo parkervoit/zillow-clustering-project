@@ -56,15 +56,15 @@ def wrangle_zillow(db_name = 'zillow', username = env.username, password = env.p
     
 def clean_zillow(zillow_df): 
     """takes in the zillow dataframe, drops nulls, removes outliers, replaces fips with county, drops duplicates, imputes missing values with the mean, includes only single unit properties, and drops unecessary columns"""
-        zillow_df = drop_nulls(zillow_df, prop_req_col = .85, prop_req_row = .65)
-        zillow_df['county'] = zillow_df['fips'].replace(to_replace = [6037, 6059, 6111], value = ['LA','Orange','Ventura'])
-        zillow_df.drop_duplicates(subset = 'parcelid', inplace = True)
-        zillow_df = remove_outliers(zillow_df, k = 1.5, col_list = ['bathroomcnt','bedroomcnt','lotsizesquarefeet','taxvaluedollarcnt','taxamount'])
-        impute(zillow_df, strat = 'mean', col_list = ['yearbuilt','calculatedbathnbr','fullbathcnt','regionidzip','calculatedfinishedsquarefeet'])
-        single_list = ['Single Family Residential','Manufactured, Modular, Prefabricated Homes','Mobile Home']
-        zillow_df = zillow_df[zillow_df['propertylandusedesc'].isin(single_list)]
-        zillow_df = zillow_df.drop(columns = ['finishedsquarefeet12','structuretaxvaluedollarcnt','censustractandblock','rawcensustractandblock','propertylandusetypeid','propertycountylandusecode','roomcnt','transactiondate','regionidcounty','fips','regionidcity'])
-        return zillow_df
+    zillow_df = drop_nulls(zillow_df, prop_req_col = .85, prop_req_row = .65)
+    zillow_df['county'] = zillow_df['fips'].replace(to_replace = [6037, 6059, 6111], value = ['LA','Orange','Ventura'])
+    zillow_df.drop_duplicates(subset = 'parcelid', inplace = True)
+    zillow_df = remove_outliers(zillow_df, k = 1.5, col_list = ['bathroomcnt','bedroomcnt','lotsizesquarefeet','taxvaluedollarcnt','taxamount'])
+    impute(zillow_df, strat = 'mean', col_list = ['calculatedfinishedsquarefeet'])
+    single_list = ['Single Family Residential','Manufactured, Modular, Prefabricated Homes','Mobile Home']
+    zillow_df = zillow_df[zillow_df['propertylandusedesc'].isin(single_list)]
+    zillow_df = zillow_df.drop(columns = ['finishedsquarefeet12','structuretaxvaluedollarcnt','censustractandblock','rawcensustractandblock','propertylandusetypeid','propertycountylandusecode','roomcnt','transactiondate','regionidcounty','fips','regionidcity','calculatedbathnbr','fullbathcnt','assessmentyear','regionidzip'])
+    return zillow_df
     
 def missing_values_table(df):
     '''
