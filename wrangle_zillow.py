@@ -50,8 +50,8 @@ def wrangle_zillow(db_name = 'zillow', username = env.username, password = env.p
                     WHERE  prop.latitude IS NOT NULL 
                     AND prop.longitude IS NOT NULL
                     AND transactiondate LIKE "2017%%";''', get_connection('zillow'))
-        zillow_df.to_csv('zillow.csv')
         zillow_df = clean_zillow(zillow_df)
+        zillow_df.to_csv('zillow.csv')
         return zillow_df
     
 def clean_zillow(zillow_df): 
@@ -191,11 +191,6 @@ def quant_transformer(data_set, output_dist = 'normal'):
     x_scaled.columns = data_set.columns
     return x_scaled
 
-def months_to_years(data_set):
-    data_set['tenure_years'] = round(data_set.tenure / 12, 0)
-    data_set = data_set.rename(columns={'tenure': 'tenure_month'})
-    return data_set
-
 def get_dummies(df, object_cols):
     """
     This function takes in a dataframe and list of object column names,
@@ -203,11 +198,6 @@ def get_dummies(df, object_cols):
     It then appends the dummy variables to the original dataframe.
     It returns the original df with the appended dummy variables.
     """
-
-    # run pd.get_dummies() to create dummy vars for the object columns.
-    # we will drop the column representing the first unique value of each variable
-    # we will opt to not create na columns for each variable with missing values
-    # (all missing values have been removed.)
     dummy_df = pd.get_dummies(object_cols, dummy_na=False, drop_first=True)
 
     # concatenate the dataframe with dummies to our original dataframe
@@ -233,5 +223,48 @@ def impute(df, strat, col_list):
     imputer = SimpleImputer(strategy=strat)  # build imputer
 
     df[col_list] = imputer.fit_transform(df[col_list]) # fit/transform selected columns
+
+    return df
+
+def get_numeric_X_cols(X_train, object_cols):
+    """
+    takes in a dataframe and list of object column names
+    and returns a list of all other columns names, the non-objects.
+    """
+    numeric_cols = [col for col in X_train.columns.values if col not in object_cols]
+
+    return numeric_cols
+
+def get_object_cols(df):
+    """
+    This function takes in a dataframe and identifies the columns that are object types
+    and returns a list of those column names.
+    """
+    # create a mask of columns whether they are object type or not
+    mask = np.array(df.dtypes == "object")
+
+    # get a list of the column names that are objects (from the mask)
+    object_cols = df.iloc[:, mask].columns.tolist()
+
+    return object_cols
+
+
+def create_dummies(df, object_cols):
+    """
+    This function takes in a dataframe and list of object column names,
+    and creates dummy variables of each of those columns.
+    It then appends the dummy variables to the original dataframe.
+    It returns the original df with the appended dummy variables.
+    """
+
+    # run pd.get_dummies() to create dummy vars for the object columns.
+    # we will drop the column representing the first unique value of each variable
+    # we will opt to not create na columns for each variable with missing values
+    # (all missing values have been removed.)
+    dummy_df = pd.get_dummies(object_cols, dummy_na=False, drop_first=True)
+
+    # concatenate the dataframe with dummies to our original dataframe
+    # via column (axis=1)
+    df = pd.concat([df, dummy_df], axis=1)
 
     return df
